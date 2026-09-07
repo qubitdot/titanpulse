@@ -1,44 +1,33 @@
 // ============================================================
-// TACÔMETRO HONDA FAN 125 2018
-// Arduino Nano -> Painel Titan 2023 Blackout
+// 2018 HONDA FAN 125 TACHOMETER
+// Arduino Nano -> 2023 Titan Blackout Dashboard
 //
-// D2 = entrada do pulso da moto
-// D9 = saída do sinal para o painel
+// D2 = motorcycle pulse input
+// D9 = signal output to the dashboard
 //
-// Cada posição da tabela representa uma faixa de 250 RPM.
-// Os valores de frequência são PROVISÓRIOS e devem ser
-// substituídos pelos valores descobertos nos testes.
+// Each table entry represents a 250 RPM range.
+// The frequency values are TEMPORARY and must be
+// replaced with the values determined through testing.
 // ============================================================
 
 
 // ============================================================
-// CONFIGURAÇÃO
+// CONFIGURATION
 // ============================================================
 
 const byte PINO_ENTRADA = 2;
 const byte PINO_SAIDA   = 9;
 
-// Quantidade de eventos detectados pelo sensor por volta.
-// Valor já calibrado nos testes anteriores.
+// Number of events detected by the sensor per revolution.
+// Value already calibrated during previous tests.
 const float PULSOS_POR_VOLTA = 9.2;
 
-// Ignora pulsos separados por menos que 500 microssegundos.
+// Ignores pulses that occur less than 500 microseconds apart.
 const unsigned long FILTRO_US = 500;
 
 
 // ============================================================
-// TABELA DE FREQUÊNCIAS
-// ============================================================
-//
-// Cada posição representa:
-//
-// [0]  = 250  até  499 RPM
-// [1]  = 500  até  749 RPM
-// [2]  = 750  até  999 RPM
-// [3]  = 1000 até 1249 RPM
-// ...
-// [43] = 11000 até 11249 RPM
-//
+// FREQUENCY TABLE
 // ============================================================
 
 const float frequencias[44] = {
@@ -91,7 +80,7 @@ const float frequencias[44] = {
 
 
 // ============================================================
-// VARIÁVEIS
+// VARIABLES
 // ============================================================
 
 volatile unsigned long pulsos = 0;
@@ -102,7 +91,7 @@ float frequenciaAtual = 0.0;
 
 
 // ============================================================
-// INTERRUPÇÃO DO SENSOR
+// SENSOR INTERRUPT
 // ============================================================
 
 void contarPulso() {
@@ -119,28 +108,26 @@ void contarPulso() {
 
 
 // ============================================================
-// ESCOLHE O QUADRADO DO PAINEL
+// SELECTS THE DASHBOARD RANGE
 // ============================================================
 //
-// 250-499   -> posição 0
-// 500-749   -> posição 1
-// 750-999   -> posição 2
+// 250-499   -> position 0
+// 500-749   -> position 1
+// 750-999   -> position 2
 // etc.
 //
-// Não existem 44 IFs.
-// A própria matemática encontra a posição da tabela.
 // ============================================================
 
 float converterRPM(float rpm) {
 
-  // Abaixo de 250 RPM = painel parado
+  // Below 250 RPM = dashboard stopped
   if (rpm < 250.0) {
     return 0.0;
   }
 
   int indice = (int)((rpm - 250.0) / 250.0);
 
-  // Proteção contra ultrapassar a tabela
+  // Protection against exceeding the table bounds
   if (indice < 0) {
     indice = 0;
   }
@@ -154,16 +141,16 @@ float converterRPM(float rpm) {
 
 
 // ============================================================
-// CONFIGURA TIMER1
+// CONFIGURE TIMER1
 // ============================================================
 //
 // D9 = OC1A
 //
-// Timer1 gera diretamente uma onda quadrada em hardware.
-// Isso permite frequências decimais sem delayMicroseconds()
-// e sem bloquear a leitura do sensor.
+// Timer1 directly generates a square wave in hardware.
+// This allows decimal frequencies without delayMicroseconds()
+// and without blocking sensor readings.
 //
-// Frequência:
+// Frequency:
 //
 // F_CPU / (2 * prescaler * (OCR1A + 1))
 //
@@ -174,7 +161,7 @@ void configurarFrequencia(float frequencia) {
 
   if (frequencia <= 0.0) {
 
-    // Desliga saída do Timer1
+    // Turn off Timer1 output
     TCCR1A &= ~(1 << COM1A0);
 
     digitalWrite(PINO_SAIDA, LOW);
@@ -185,13 +172,13 @@ void configurarFrequencia(float frequencia) {
   }
 
 
-  // Calcula OCR1A para a frequência desejada
+  // Calculate OCR1A for the desired frequency
   unsigned long valor =
     (unsigned long)((16000000.0 /
     (2.0 * 64.0 * frequencia)) - 1.0);
 
 
-  // Limites de segurança
+  // Safety limits
   if (valor > 65535) {
     valor = 65535;
   }
