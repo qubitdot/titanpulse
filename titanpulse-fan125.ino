@@ -188,7 +188,7 @@ void configurarFrequencia(float frequencia) {
   }
 
 
-  // Timer1 em CTC
+  // Timer1 in CTC mode
   TCCR1A = 0;
   TCCR1B = 0;
 
@@ -198,7 +198,7 @@ void configurarFrequencia(float frequencia) {
   // Toggle OC1A = D9
   TCCR1A |= (1 << COM1A0);
 
-  // Valor de comparação
+  // Compare value
   OCR1A = (uint16_t)valor;
 
   // Prescaler 64
@@ -224,7 +224,7 @@ void setup() {
   digitalWrite(PINO_SAIDA, LOW);
 
 
-  // Interrupção do sensor
+  // Sensor interrupt
   attachInterrupt(
     digitalPinToInterrupt(PINO_ENTRADA),
     contarPulso,
@@ -232,7 +232,7 @@ void setup() {
   );
 
 
-  // Começa com saída desligada
+  // Start with the output turned off
   configurarFrequencia(0.0);
 }
 
@@ -246,12 +246,12 @@ void loop() {
   static unsigned long ultimoCalculo = 0;
 
 
-  // Atualiza RPM a cada 100 ms
+  // Update RPM every 100 ms
   if (millis() - ultimoCalculo >= 100) {
 
 
     // --------------------------------------------------------
-    // Copia quantidade de pulsos
+    // Copy pulse count
     // --------------------------------------------------------
 
     noInterrupts();
@@ -264,7 +264,7 @@ void loop() {
 
 
     // --------------------------------------------------------
-    // Calcula pulsos por segundo
+    // Calculate pulses per second
     // --------------------------------------------------------
 
     float pulsosPorSegundo =
@@ -272,7 +272,7 @@ void loop() {
 
 
     // --------------------------------------------------------
-    // Calcula RPM
+    // Calculate RPM
     // --------------------------------------------------------
 
     float rpmInstantaneo =
@@ -281,7 +281,7 @@ void loop() {
 
 
     // --------------------------------------------------------
-    // Filtro
+    // Filter
     // --------------------------------------------------------
 
     rpmFiltrado =
@@ -290,7 +290,7 @@ void loop() {
 
 
     // --------------------------------------------------------
-    // Procura o quadradinho correspondente
+    // Find the corresponding range
     // --------------------------------------------------------
 
     frequenciaAtual =
@@ -298,14 +298,14 @@ void loop() {
 
 
     // --------------------------------------------------------
-    // Manda a frequência correspondente para o painel
+    // Send the corresponding frequency to the dashboard
     // --------------------------------------------------------
 
     configurarFrequencia(frequenciaAtual);
 
 
     // --------------------------------------------------------
-    // Monitor Serial
+    // Serial Monitor
     // --------------------------------------------------------
 
     Serial.print("RPM REAL: ");
