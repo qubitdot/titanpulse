@@ -73,6 +73,8 @@
 </tr>
 </table>
 
+<br>
+
 ## Download
 
 The latest release of TitanPulse is available on [GitHub Releases](https://github.com/qubitdot/titanpulse/releases).
