@@ -55,17 +55,23 @@
 
 <br>
 
-The project works as a signal converter:
-
-```mermaid
-flowchart LR
-    A[Motorcycle Ignition Signal] --> B[Arduino Nano]
-    B --> C[RPM Calculation]
-    C --> D[Calibration Table]
-    D --> E[Frequency Output]
-    E --> F[Titan Blackout Dashboard]
-    F --> G[RPM Indicator]
-```
+<table>
+<tr>
+<td align="center">🏍️<br><b>Ignition Signal</b></td>
+<td>→</td>
+<td align="center">🔧<br><b>Arduino Nano</b></td>
+<td>→</td>
+<td align="center">📊<br><b>RPM Calculation</b></td>
+<td>→</td>
+<td align="center">⚙️<br><b>Calibration</b></td>
+<td>→</td>
+<td align="center">〰️<br><b>Frequency Output</b></td>
+<td>→</td>
+<td align="center">🖥️<br><b>Titan Blackout</b></td>
+<td>→</td>
+<td align="center">RPM<br><b>Indicator</b></td>
+</tr>
+</table>
 
 ## Download
 
@@ -141,15 +147,17 @@ The signal is connected to D2 through a 10 kΩ resistor.
 
 Simplified diagram:
 
+```text
     Blue/yellow signal
            |
           10 kΩ
            |
-           +-------- D2 Arduino Nano
+           └──────── D2 Arduino Nano
 
     Motorcycle GND
            |
-           +-------- GND Arduino Nano
+           └──────── GND Arduino Nano
+```
 
 <br>
 
@@ -157,9 +165,12 @@ Simplified diagram:
 
 D9 is connected to the dashboard's RPM input.
 
-    Arduino D9
-        |
-        +-------- Dashboard RPM input
+```text
+Arduino D9
+    │
+    └──────── RPM Input
+              Titan Blackout Dashboard
+```
 
 The Arduino GND and dashboard GND must share a common reference.
 
