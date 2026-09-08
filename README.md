@@ -106,7 +106,7 @@ This approach treats the dashboard as a black box that can be calibrated empiric
 
 ### Motorcycle
 
-- Honda Fan 125 2018
+- Honda Fan 125 (2018)
 
 ### Dashboard
 
@@ -185,11 +185,11 @@ During testing, it was observed that the Arduino detects approximately 9.2 pulse
 
 The code uses:
 
-    PULSOS_POR_VOLTA = 9.2
+    PULSES_PER_REVOLUTION = 9.2
 
 At each measurement interval, the Arduino calculates the number of pulses per second and converts it to RPM:
 
-    RPM = (pulsos_por_segundo × 60) / pulsos_por_volta
+    instantRpm = (pulsesPerSecond × 60) / PULSES_PER_REVOLUTION
 
 The reading is subsequently filtered to reduce fluctuations.
 
@@ -299,7 +299,7 @@ For example:
         ↓
      index 15
         ↓
-    frequencias[15]
+    frequencies[15]
         ↓
     frequency configured for 4000–4249 RPM
 
@@ -309,13 +309,13 @@ For example:
 
 The only part that normally needs to be changed during calibration is:
 
-    const float frequencias[44]
+    const float frequencies[44]
 
 The values can be completely non-linear.
 
 For example:
 
-    const float frequencias[44] = {
+    const float frequencies[44] = {
         8.20,
         8.20,
         9.01,
@@ -355,7 +355,7 @@ The Arduino sends information through the Serial Monitor at 115200 baud.
 
 Example:
 
-    RPM REAL: 4032 | QUADRADO: 15 | Hz ENVIADO: 8.200
+    REAL RPM: 4032 | RANGE: 15 | FREQUENCY SENT: 8.200
 
 This makes it possible to simultaneously verify:
 
@@ -457,11 +457,7 @@ Another dashboard may use a different RPM input and require different calibratio
 
 The frequency table is also specific to the combination of:
 
-    Honda Fan 125 2018
-    +
-    Titan 2023 Blackout
-    +
-    Arduino Nano
+    Honda Fan 125 2018 + Titan 2023 Blackout + Arduino Nano
 
 
 Therefore, the table values should not be considered a universal specification.
