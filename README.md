@@ -172,11 +172,15 @@ During testing, it was observed that the Arduino detects approximately 9.2 pulse
 
 The code uses:
 
-    PULSES_PER_REVOLUTION = 9.2
+```text
+PULSES_PER_REVOLUTION = 9.2
+```
 
 At each measurement interval, the Arduino calculates the number of pulses per second and converts it to RPM:
 
-    instantRpm = (pulsesPerSecond × 60) / PULSES_PER_REVOLUTION
+```text
+instantRpm = (pulsesPerSecond × 60) / PULSES_PER_REVOLUTION
+```
 
 The reading is subsequently filtered to reduce fluctuations.
 
@@ -210,8 +214,9 @@ During testing, some frequencies produced approximately:
 
 These results demonstrate that it is not safe to assume a simple formula such as:
 
-    frequency = RPM / constant
-
+```text
+frequency = RPM / constant
+```
 Therefore, the project uses a calibration table.
 
 <br>
@@ -222,17 +227,21 @@ The table contains 44 positions.
 
 Each position represents a 250 RPM range:
 
+```text
     [00] 250–499 RPM
     [01] 500–749 RPM
     [02] 750–999 RPM
     ...
     [43] 11000+ RPM
+```
 
 In the code:
 
+```arduino
     const float frequencias[44] = {
         ...
     };
+```
 
 Each position contains the frequency that should be sent to the dashboard for that RPM range.
 
@@ -248,15 +257,21 @@ For each frequency tested, observe the RPM indicated by the dashboard.
 
 For example:
 
-    8.20 Hz → dashboard indicates approximately 4000 RPM
+```text
+8.20 Hz → dashboard indicates approximately 4000 RPM
+```
 
 If the goal is for the range:
 
-    4000–4249 RPM
+```text
+4000–4249 RPM
+```
 
 to be displayed as 4000 RPM by the dashboard, the corresponding table position should contain:
 
-    8.20
+```text
+8.20
+```
 
 Then, when the Arduino detects an RPM between 4000 and 4249, it will send 8.20 Hz.
 
@@ -269,6 +284,7 @@ The process is repeated for each range.
 
 The table follows this logic:
 
+```text
     Detected RPM
           ↓
     (RPM - 250) / 250
@@ -278,10 +294,11 @@ The table follows this logic:
     corresponding frequency
           ↓
        dashboard
-
+```
 
 For example:
 
+```text
     4000 RPM
         ↓
      index 15
@@ -289,6 +306,7 @@ For example:
     frequencies[15]
         ↓
     frequency configured for 4000–4249 RPM
+```
 
 <br>
 
@@ -296,12 +314,15 @@ For example:
 
 The only part that normally needs to be changed during calibration is:
 
-    const float frequencies[44]
+```arduino
+const float frequencies[44]
+```
 
 The values can be completely non-linear.
 
 For example:
 
+```arduino
     const float frequencies[44] = {
         8.20,
         8.20,
@@ -312,6 +333,7 @@ For example:
         9.14,
         ...
     };
+```
 
 There is no requirement for the values to increase uniformly.
 
@@ -325,7 +347,9 @@ The project was designed so that the calibration can be audited directly in the 
 
 Each table entry includes a comment indicating its RPM range:
 
-    8.200,   // [15] 4000 - 4249
+```arduino
+8.200,   // [15] 4000 - 4249
+```
 
 This makes it possible to visually verify:
 
@@ -342,7 +366,9 @@ The Arduino sends information through the Serial Monitor at 115200 baud.
 
 Example:
 
-    REAL RPM: 4032 | RANGE: 15 | FREQUENCY SENT: 8.200
+```text
+REAL RPM: 4032 | RANGE: 15 | FREQUENCY SENT: 8.200
+```
 
 This makes it possible to simultaneously verify:
 
@@ -372,19 +398,23 @@ It is recommended to record the results externally during testing before modifyi
 
 Suppose testing produces:
 
+```text
     8.17 Hz → 3000 RPM
     8.21 Hz → 3250 RPM
     8.26 Hz → 3500 RPM
     8.34 Hz → 3750 RPM
     8.20 Hz → 4000 RPM
+```
 
 The table may contain:
 
+```text
     8.17,   // 3000
     8.21,   // 3250
     8.26,   // 3500
     8.34,   // 3750
     8.20,   // 4000
+```
 
 The order does not need to be ascending.
 
@@ -398,11 +428,13 @@ The project was developed for an Arduino Nano based on the ATmega328P.
 
 In the Arduino IDE:
 
+```text
     Board:
     Arduino Nano
 
     Processor:
     ATmega328P
+```
 
 If a Nano with a different bootloader is used, select the corresponding option in the Arduino IDE.
 
@@ -444,8 +476,9 @@ Another dashboard may use a different RPM input and require different calibratio
 
 The frequency table is also specific to the combination of:
 
-    Honda Fan 125 2018 + Titan 2023 Blackout + Arduino Nano
-
+```text
+Honda Fan 125 2018 + Titan 2023 Blackout + Arduino Nano
+```
 
 Therefore, the table values should not be considered a universal specification.
 
