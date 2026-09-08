@@ -138,15 +138,15 @@ The signal is connected to D2 through a 10 kΩ resistor.
 Simplified diagram:
 
 ```text
-    Blue/yellow signal
-           |
-          10 kΩ
-           |
-           └──────── D2 Arduino Nano
+Blue/yellow signal
+       |
+      10 kΩ
+       |
+       └──────── D2 Arduino Nano
 
-    Motorcycle GND
-           |
-           └──────── GND Arduino Nano
+Motorcycle GND
+       |
+       └──────── GND Arduino Nano
 ```
 
 <br>
@@ -228,19 +228,19 @@ The table contains 44 positions.
 Each position represents a 250 RPM range:
 
 ```text
-    [00] 250–499 RPM
-    [01] 500–749 RPM
-    [02] 750–999 RPM
-    ...
-    [43] 11000+ RPM
+[00] 250–499 RPM
+[01] 500–749 RPM
+[02] 750–999 RPM
+...
+[43] 11000+ RPM
 ```
 
 In the code:
 
 ```arduino
-    const float frequencias[44] = {
-        ...
-    };
+const float frequencias[44] = {
+    ...
+};
 ```
 
 Each position contains the frequency that should be sent to the dashboard for that RPM range.
@@ -323,16 +323,16 @@ The values can be completely non-linear.
 For example:
 
 ```arduino
-    const float frequencies[44] = {
-        8.20,
-        8.20,
-        9.01,
-        8.74,
-        9.03,
-        8.91,
-        9.14,
-        ...
-    };
+const float frequencies[44] = {
+    8.20,
+    8.20,
+    9.01,
+    8.74,
+    9.03,
+    8.91,
+    9.14,
+    ...
+};
 ```
 
 There is no requirement for the values to increase uniformly.
@@ -399,21 +399,21 @@ It is recommended to record the results externally during testing before modifyi
 Suppose testing produces:
 
 ```text
-    8.17 Hz → 3000 RPM
-    8.21 Hz → 3250 RPM
-    8.26 Hz → 3500 RPM
-    8.34 Hz → 3750 RPM
-    8.20 Hz → 4000 RPM
+8.17 Hz → 3000 RPM
+8.21 Hz → 3250 RPM
+8.26 Hz → 3500 RPM
+8.34 Hz → 3750 RPM
+8.20 Hz → 4000 RPM
 ```
 
 The table may contain:
 
 ```text
-    8.17,   // 3000
-    8.21,   // 3250
-    8.26,   // 3500
-    8.34,   // 3750
-    8.20,   // 4000
+8.17,   // 3000
+8.21,   // 3250
+8.26,   // 3500
+8.34,   // 3750
+8.20,   // 4000
 ```
 
 The order does not need to be ascending.
@@ -429,11 +429,11 @@ The project was developed for an Arduino Nano based on the ATmega328P.
 In the Arduino IDE:
 
 ```text
-    Board:
-    Arduino Nano
+Board:
+Arduino Nano
 
-    Processor:
-    ATmega328P
+Processor:
+ATmega328P
 ```
 
 If a Nano with a different bootloader is used, select the corresponding option in the Arduino IDE.
