@@ -15,22 +15,22 @@
 // CONFIGURATION
 // ============================================================
 
-const byte PINO_ENTRADA = 2;
-const byte PINO_SAIDA   = 9;
+const byte INPUT_PIN = 2;
+const byte OUTPUT_PIN   = 9;
 
 // Number of events detected by the sensor per revolution.
 // Value already calibrated during previous tests.
-const float PULSOS_POR_VOLTA = 9.2;
+const float PULSES_PER_REVOLUTION = 9.2;
 
 // Ignores pulses that occur less than 500 microseconds apart.
-const unsigned long FILTRO_US = 500;
+const unsigned long FILTER_US = 500;
 
 
 // ============================================================
 // FREQUENCY TABLE
 // ============================================================
 
-const float frequencias[44] = {
+const float frequencies[44] = {
 
   8.800,   // [00] 250 - 499
   8.828,   // [01] 500 - 749
@@ -83,26 +83,26 @@ const float frequencias[44] = {
 // VARIABLES
 // ============================================================
 
-volatile unsigned long pulsos = 0;
-volatile unsigned long ultimoPulso = 0;
+volatile unsigned long pulseCount = 0;
+volatile unsigned long lastPulse = 0;
 
-float rpmFiltrado = 0.0;
-float frequenciaAtual = 0.0;
+float filteredRpm = 0.0;
+float currentFrequency = 0.0;
 
 
 // ============================================================
 // SENSOR INTERRUPT
 // ============================================================
 
-void contarPulso() {
+void countPulse() {
 
-  unsigned long agora = micros();
+  unsigned long now = micros();
 
-  if (agora - ultimoPulso >= FILTRO_US) {
+  if (now - lastPulse >= FILTER_US) {
 
-    pulsos++;
+    pulseCount++;
 
-    ultimoPulso = agora;
+    lastPulse = now;
   }
 }
 
@@ -118,25 +118,25 @@ void contarPulso() {
 //
 // ============================================================
 
-float converterRPM(float rpm) {
+float convertRpm(float rpm) {
 
   // Below 250 RPM = dashboard stopped
   if (rpm < 250.0) {
     return 0.0;
   }
 
-  int indice = (int)((rpm - 250.0) / 250.0);
+  int index = (int)((rpm - 250.0) / 250.0);
 
   // Protection against exceeding the table bounds
-  if (indice < 0) {
-    indice = 0;
+  if (index < 0) {
+    index = 0;
   }
 
-  if (indice >= 44) {
-    indice = 43;
+  if (index >= 44) {
+    index = 43;
   }
 
-  return frequencias[indice];
+  return frequencies[index];
 }
 
 
@@ -157,34 +157,34 @@ float converterRPM(float rpm) {
 // Prescaler = 64
 // ============================================================
 
-void configurarFrequencia(float frequencia) {
+void setFrequency(float frequency) {
 
-  if (frequencia <= 0.0) {
+  if (frequency <= 0.0) {
 
     // Turn off Timer1 output
     TCCR1A &= ~(1 << COM1A0);
 
-    digitalWrite(PINO_SAIDA, LOW);
+    digitalWrite(OUTPUT_PIN, LOW);
 
-    frequenciaAtual = 0.0;
+    currentFrequency = 0.0;
 
     return;
   }
 
 
   // Calculate OCR1A for the desired frequency
-  unsigned long valor =
+  unsigned long value =
     (unsigned long)((16000000.0 /
-    (2.0 * 64.0 * frequencia)) - 1.0);
+    (2.0 * 64.0 * frequency)) - 1.0);
 
 
   // Safety limits
-  if (valor > 65535) {
-    valor = 65535;
+  if (value > 65535) {
+    value = 65535;
   }
 
-  if (valor < 1) {
-    valor = 1;
+  if (value < 1) {
+    value = 1;
   }
 
 
@@ -199,13 +199,13 @@ void configurarFrequencia(float frequencia) {
   TCCR1A |= (1 << COM1A0);
 
   // Compare value
-  OCR1A = (uint16_t)valor;
+  OCR1A = (uint16_t)value;
 
   // Prescaler 64
   TCCR1B |= (1 << CS11);
   TCCR1B |= (1 << CS10);
 
-  frequenciaAtual = frequencia;
+  currentFrequency = frequency;
 }
 
 
@@ -217,23 +217,23 @@ void setup() {
 
   Serial.begin(115200);
 
-  pinMode(PINO_ENTRADA, INPUT);
+  pinMode(INPUT_PIN, INPUT);
 
-  pinMode(PINO_SAIDA, OUTPUT);
+  pinMode(OUTPUT_PIN, OUTPUT);
 
-  digitalWrite(PINO_SAIDA, LOW);
+  digitalWrite(OUTPUT_PIN, LOW);
 
 
   // Sensor interrupt
   attachInterrupt(
-    digitalPinToInterrupt(PINO_ENTRADA),
-    contarPulso,
+    digitalPinToInterrupt(INPUT_PIN),
+    countPulse,
     RISING
   );
 
 
   // Start with the output turned off
-  configurarFrequencia(0.0);
+  setFrequency(0.0);
 }
 
 
@@ -243,11 +243,11 @@ void setup() {
 
 void loop() {
 
-  static unsigned long ultimoCalculo = 0;
+  static unsigned long lastCalculation = 0;
 
 
   // Update RPM every 100 ms
-  if (millis() - ultimoCalculo >= 100) {
+  if (millis() - lastCalculation >= 100) {
 
 
     // --------------------------------------------------------
@@ -256,9 +256,9 @@ void loop() {
 
     noInterrupts();
 
-    unsigned long quantidade = pulsos;
+    unsigned long count = pulseCount;
 
-    pulsos = 0;
+    pulseCount = 0;
 
     interrupts();
 
@@ -267,75 +267,75 @@ void loop() {
     // Calculate pulses per second
     // --------------------------------------------------------
 
-    float pulsosPorSegundo =
-      quantidade * 10.0;
+    float pulsesPerSecond =
+      count * 10.0;
 
 
     // --------------------------------------------------------
     // Calculate RPM
     // --------------------------------------------------------
 
-    float rpmInstantaneo =
-      (pulsosPorSegundo * 60.0)
-      / PULSOS_POR_VOLTA;
+    float instantRpm =
+      (pulsesPerSecond * 60.0)
+      / PULSES_PER_REVOLUTION;
 
 
     // --------------------------------------------------------
     // Filter
     // --------------------------------------------------------
 
-    rpmFiltrado =
-      (rpmFiltrado * 0.40) +
-      (rpmInstantaneo * 0.60);
+    filteredRpm =
+      (filteredRpm * 0.40) +
+      (instantRpm * 0.60);
 
 
     // --------------------------------------------------------
     // Find the corresponding range
     // --------------------------------------------------------
 
-    frequenciaAtual =
-      converterRPM(rpmFiltrado);
+    currentFrequency =
+      convertRpm(filteredRpm);
 
 
     // --------------------------------------------------------
     // Send the corresponding frequency to the dashboard
     // --------------------------------------------------------
 
-    configurarFrequencia(frequenciaAtual);
+    setFrequency(currentFrequency);
 
 
     // --------------------------------------------------------
     // Serial Monitor
     // --------------------------------------------------------
 
-    Serial.print("RPM REAL: ");
-    Serial.print(rpmFiltrado, 0);
+    Serial.print("REAL RPM: ");
+    Serial.print(filteredRpm, 0);
 
-    Serial.print(" | QUADRADO: ");
+    Serial.print(" | RANGE: ");
 
-    if (rpmFiltrado < 250) {
+    if (filteredRpm < 250) {
 
       Serial.print("-");
 
     } else {
 
-      int indice =
-        (int)((rpmFiltrado - 250.0) / 250.0);
+      int index =
+        (int)((filteredRpm - 250.0) / 250.0);
 
-      if (indice < 0)
-        indice = 0;
+      if (index < 0)
+        index = 0;
 
-      if (indice >= 44)
-        indice = 43;
+      if (index >= 44)
+        index = 43;
 
-      Serial.print(indice);
+      Serial.print(index);
     }
 
-    Serial.print(" | Hz ENVIADO: ");
-    Serial.println(frequenciaAtual, 3);
+    Serial.print(" | FREQUENCY SENT: ");
+    Serial.println(currentFrequency, 3);
 
 
-    ultimoCalculo = millis();
+    lastCalculation = millis();
   }
 }
 
