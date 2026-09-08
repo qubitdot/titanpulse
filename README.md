@@ -22,8 +22,15 @@
 
 <br>
 
-<details>
-<summary><strong>Navigation</strong></summary>
+
+```text
+Ignition Signal → Arduino Nano → RPM Calculation → Calibration → Frequency Output → RPM Indicator
+```
+
+<br>
+
+<!--  <details open>
+<summary><strong>Navigation</strong></summary> -->
 
 - [Download](#download)
 - [Objective](#objective)
@@ -52,27 +59,7 @@
 - [Project Status](#project-status)
 - [License](#license)
 
-</details>
-
-<br>
-
-<table>
-<tr>
-<td align="center">🏍️<br><b>Ignition Signal</b></td>
-<td>→</td>
-<td align="center">🔧<br><b>Arduino Nano</b></td>
-<td>→</td>
-<td align="center">📊<br><b>RPM Calculation</b></td>
-<td>→</td>
-<td align="center">⚙️<br><b>Calibration</b></td>
-<td>→</td>
-<td align="center">〰️<br><b>Frequency Output</b></td>
-<td>→</td>
-<td align="center">🖥️<br><b>Titan Blackout</b></td>
-<td>→</td>
-<td align="center">RPM<br><b>Indicator</b></td>
-</tr>
-</table>
+<!--  </details> -->
 
 <br>
 
