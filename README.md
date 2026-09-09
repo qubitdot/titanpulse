@@ -17,14 +17,32 @@
 </p>
 
 <h1 align="center">TitanPulse</h1>
-<h3 align="center">Arduino-based tachometer signal system.</h3>
-<h5 align="center">Originally made for Honda Fan 125 (2018) using the Titan Blackout dashboard</h3>
+<h3 align="center">Tachometer Signal Converter for Titan Blackout Dashboard</h3>
+<p align="center">
+  An Arduino-based signal conversion system that converts a motorcycle ignition pulse signal into an RPM signal compatible with the 2023 Titan Blackout dashboard.
+</p>
 
 <br>
 
-
 ```text
-Ignition Signal → Arduino Nano → RPM Calculation → Calibration → Frequency Output → RPM Indicator
+Motorcycle
+    │
+    │ RPM pulse signal
+    ▼
+Signal Acquisition
+    │
+    ▼
+Arduino Nano
+    │
+    ├── RPM Processing
+    │
+    └── Calibration Mapping
+            │
+            ▼
+     Frequency Output
+            │
+            ▼
+Titan Blackout Dashboard
 ```
 
 <br>
@@ -33,27 +51,26 @@ Ignition Signal → Arduino Nano → RPM Calculation → Calibration → Frequen
 <summary><strong>Navigation</strong></summary> -->
 
 - [Download](#download)
-- [Objective](#objective)
+- [Problem](#problem)
+- [Solution](#solution)
+- [System Architecture](#system-architecture)
 - [Hardware](#hardware)
 - [Arduino Pinout](#arduino-pinout)
-- Signal Interface
-  - [Motorcycle Signal Input](#motorcycle-signal-input)
-  - [Dashboard Output](#dashboard-output)
-- RPM Calculation
-  - [How RPM Is Calculated](#how-rpm-is-calculated)
-  - [Why Is There a Calibration Table?](#why-is-there-a-calibration-table)
-- Calibration
-  - [Calibration Table](#calibration-table)
-  - [How to Calibrate](#how-to-calibrate)
-  - [Table Structure](#table-structure)
-  - [Changing the Calibration](#changing-the-calibration)
-  - [Auditability](#auditability)
-- Testing & Diagnostics
-  - [Serial Monitor](#serial-monitor)
-  - [Recommended Calibration Procedure](#recommended-calibration-procedure)
-  - [Example](#example)
-- Installation
-  - [Compilation](#compilation)
+- [Motorcycle Signal Input](#motorcycle-signal-input)
+- [Dashboard Output](#dashboard-output)
+- [How RPM Is Calculated](#how-rpm-is-calculated)
+- [Why Is There a Calibration Table?](#why-is-there-a-calibration-table)
+- [Calibration Table](#calibration-table)
+- [How to Calibrate](#how-to-calibrate)
+- [Table Structure](#table-structure)
+- [Changing the Calibration](#changing-the-calibration)
+- [Auditability](#auditability)
+- [Testing & Validation](#testing--validation)
+- [Serial Monitor](#serial-monitor)
+- [Recommended Calibration Procedure](#recommended-calibration-procedure)
+- [Example](#example)
+- [Compilation](#compilation)
+- [Installation](#installation)
 - [Safety](#safety)
 - [Known Limitations](#known-limitations)
 - [Project Status](#project-status)
@@ -71,29 +88,79 @@ Always use the latest **stable** release unless you have a specific reason to us
 
 <br>
 
-## Objective
+## Problem
 
-The 2018 Honda Fan 125 used in this project does not have a factory tachometer.
+The Titan Blackout dashboard requires an RPM signal that is not directly
+compatible with the ignition signal available from the motorcycle.
 
-The objective is to use the signal from the ignition system to calculate engine speed and generate a signal compatible with the RPM input of an aftermarket 2023 Titan Blackout dashboard.
+Connecting the motorcycle signal directly to the dashboard does not produce
+a reliable RPM indication.
 
-The dashboard did not show a simple linear relationship between input frequency and indicated RPM. Therefore, the project uses an experimental calibration table.
+During development, the dashboard was observed to respond non-linearly
+to different input frequencies. Small changes in frequency could produce
+large changes in the indicated RPM.
 
-The Arduino does not attempt to mathematically reproduce the dashboard's internal operation.
+This makes a simple linear frequency-to-RPM conversion unsuitable for
+this application.
 
-Instead, it answers:
+<br>
 
-"When the engine is within this RPM range, what frequency makes this dashboard display that range correctly?"
+## Solution
 
-This approach treats the dashboard as a black box that can be calibrated empirically.
+TitanPulse acts as an intermediate signal converter between the motorcycle's
+ignition system and the Titan Blackout dashboard.
+
+The Arduino Nano reads the motorcycle's pulse signal, calculates engine
+speed, maps the calculated RPM to a calibrated frequency, and generates
+the corresponding output signal for the dashboard.
+
+The dashboard is treated as a black-box device during calibration.
+
+Rather than attempting to reproduce its internal operation, TitanPulse
+determines experimentally which output frequency produces the desired
+displayed RPM for each operating range.
+
+<br>
+
+## System Architecture
+
+TitanPulse is divided into four functional stages.
+
+### 1. Signal Acquisition
+
+The motorcycle's ignition pulse signal is read by the Arduino Nano through
+a protected input interface.
+
+### 2. RPM Processing
+
+The detected pulses are counted and converted into engine RPM using the
+measured pulse-per-revolution factor.
+
+A digital filter is applied to reduce short-term fluctuations.
+
+### 3. Calibration Mapping
+
+The calculated RPM is mapped to one of 44 predefined RPM ranges.
+
+Each range has an independently calibrated output frequency.
+
+### 4. Signal Generation
+
+The selected frequency is generated by the Arduino Nano and sent to the
+Titan Blackout dashboard's RPM input.
 
 <br>
 
 ## Hardware
 
-### Motorcycle
+### Signal Source
+
+The initial implementation and calibration were performed using:
 
 - Honda Fan 125 (2018)
+
+The motorcycle serves as the signal source used during development and
+validation.
 
 ### Dashboard
 
@@ -111,7 +178,7 @@ This approach treats the dashboard as a black box that can be calibrated empiric
 - Copper wires
 - Multimeter
 
-The final installation should use soldered and properly insulated connections.
+Permanent installation should use soldered and properly insulated connections.
 
 <br>
 
@@ -133,7 +200,9 @@ D9 uses the ATmega328P Timer1 to generate the output frequency.
 
 The signal used in this project is the blue/yellow wire associated with the motorcycle's ignition pulse.
 
-The signal is connected to D2 through a 10 kΩ resistor.
+The signal is connected to D2 through a 10 kΩ series resistor as used in the current prototype.
+
+This resistor provides basic input protection, but does not constitute a complete automotive signal-conditioning stage.
 
 Simplified diagram:
 
@@ -217,13 +286,15 @@ These results demonstrate that it is not safe to assume a simple formula such as
 ```text
 frequency = RPM / constant
 ```
-Therefore, the project uses a calibration table.
+
+Therefore, TitanPulse uses an empirical calibration table to characterize
+and compensate for the dashboard's non-linear response.
 
 <br>
 
 ## Calibration Table
 
-The table contains 44 positions.
+The calibration table contains 44 RPM ranges.
 
 Each position represents a 250 RPM range:
 
@@ -238,7 +309,7 @@ Each position represents a 250 RPM range:
 In the code:
 
 ```arduino
-const float frequencias[44] = {
+const float frequencies[44] = {
     ...
 };
 ```
@@ -254,6 +325,8 @@ Calibration is performed with the engine turned off.
 The Arduino can be used to send a fixed frequency to the dashboard.
 
 For each frequency tested, observe the RPM indicated by the dashboard.
+
+The goal is to determine the output frequency required for each target RPM range, not to recalibrate the RPM measurement performed by the Arduino.
 
 For example:
 
@@ -360,6 +433,25 @@ This makes it possible to visually verify:
 
 <br>
 
+## Testing & Validation
+
+TitanPulse is validated in two stages.
+
+### Signal Validation
+
+The Arduino must reliably detect the motorcycle pulse signal and calculate
+engine RPM across the intended operating range.
+
+### Dashboard Validation
+
+The generated frequency must produce the expected RPM indication on the
+Titan Blackout dashboard.
+
+Both stages must be validated independently before the complete system can
+be considered functional.
+
+<br>
+
 ## Serial Monitor
 
 The Arduino sends information through the Serial Monitor at 115200 baud.
@@ -396,7 +488,7 @@ It is recommended to record the results externally during testing before modifyi
 
 ## Example
 
-Suppose testing produces:
+For example, a hypothetical calibration result could be:
 
 ```text
 8.17 Hz → 3000 RPM
@@ -448,9 +540,9 @@ If a Nano with a different bootloader is used, select the corresponding option i
 4. Upload the firmware.
 5. Open the Serial Monitor at 115200 baud.
 6. Verify that the Arduino is detecting RPM.
-7. Verify the frequency being sent.
-8. Calibrate the table.
-9. After calibration, test with the engine running.
+7. Verify the frequency being generated.
+
+Calibration must be completed before the system can be considered ready for practical use.
 
 <br>
 
@@ -470,27 +562,32 @@ All connections must be insulated and mechanically protected against vibration, 
 
 ## Known Limitations
 
-The project depends on the specific behavior of the Titan 2023 Blackout dashboard used during testing.
+TitanPulse is designed specifically around the signal characteristics of
+the Titan Blackout dashboard.
 
-Another dashboard may use a different RPM input and require different calibration.
+The calibration profile is dependent on the target dashboard and its
+observed response.
 
-The frequency table is also specific to the combination of:
-
-```text
-Honda Fan 125 2018 + Titan 2023 Blackout + Arduino Nano
-```
-
-Therefore, the table values should not be considered a universal specification.
+The motorcycle used as the signal source may also affect the input signal
+characteristics and may require adjustments to the signal acquisition
+stage or RPM calibration.
 
 <br>
 
 ## Project Status
 
-The firmware is functional as a prototype, but not ready for practical use.
+TitanPulse is under active development.
 
-The architecture for signal reading, RPM calculation, range selection, and signal generation has been implemented.
+The core system architecture has been implemented, including signal
+acquisition, RPM calculation, filtering, calibration mapping, frequency
+generation, and diagnostic output.
 
-The frequency table is deliberately editable and must be calibrated experimentally to achieve the best possible correspondence between the engine's actual RPM and the dashboard's displayed RPM.
+The current development stage is focused on calibration and validation of
+the frequency mapping for the Titan Blackout dashboard.
+
+The system will be considered ready for practical use once the calibrated
+mapping has been validated across the intended operating RPM range under
+real operating conditions.
 
 <br>
 
@@ -502,6 +599,8 @@ You are free to use, copy, modify, merge, publish, distribute, sublicense, and/o
 
 See the [LICENSE](LICENSE) file for the complete license text.
 
-<br>
+<br><br><br>
 
-made with ♥️ in Bazil.
+<p align="center">
+  made with ♥️ in Brazil.
+</p>
