@@ -1,5 +1,5 @@
 // ============================================================
-// 2018 HONDA FAN 125 TACHOMETER
+// TITAN BLACKOUT TACHOMETER SYSTEM
 // Arduino Nano -> 2023 Titan Blackout Dashboard
 //
 // D2 = motorcycle pulse input
